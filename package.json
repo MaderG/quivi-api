@@ -10,13 +10,19 @@
     "docker:stop": "docker-compose stop",
     "docker:delete": "docker-compose down",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init"
+    "prisma:migrate": "prisma migrate dev --name init",
+    "format": "prettier --write \"src/**/*.js\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^9.6.0",
+    "eslint": "^8.57.0",
+    "globals": "^15.8.0",
     "nodemon": "^3.1.4",
+    "prettier": "^3.3.2",
+    "prettier-eslint": "^16.3.0",
     "prisma": "^5.16.2"
   },
   "dependencies": {

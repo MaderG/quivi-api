@@ -33,29 +33,29 @@ A estrutura do projeto está organizada da seguinte forma:
 
 1. Clone o repositório:
 
-    ```bash
-    git clone https://github.com/sua-empresa/quivi-api.git
-    cd quivi-api
-    ```
+   ```bash
+   git clone https://github.com/sua-empresa/quivi-api.git
+   cd quivi-api
+   ```
 
 2. Instale as dependências:
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 3. Configure o banco de dados com Docker:
 
-    ```bash
-    npm run docker:start
-    ```
+   ```bash
+   npm run docker:start
+   ```
 
 4. Gere os arquivos do Prisma:
 
-    ```bash
-    npm run prisma:generate
-    npm run prisma:migrate
-    ```
+   ```bash
+   npm run prisma:generate
+   npm run prisma:migrate
+   ```
 
 ## Scripts Disponíveis
 
@@ -71,9 +71,9 @@ A estrutura do projeto está organizada da seguinte forma:
 
 1. Inicie a aplicação:
 
-    ```bash
-    npm start
-    ```
+   ```bash
+   npm start
+   ```
 
 2. A aplicação estará disponível em `http://localhost:3000`.
 
