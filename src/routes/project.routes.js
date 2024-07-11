@@ -13,3 +13,5 @@ projectRouter.use(
     .put('/:id', projectController.update)
     .delete('/:id', projectController.delete)
 );
+
+export default projectRouter;
