@@ -20,7 +20,8 @@ export default class FreelancerController {
         data: {
           user: {
             create: {
-              name: `${firstName} ${lastName}`,
+              firstName: firstName,
+              lastName: lastName,
               email,
               phone,
               password,
