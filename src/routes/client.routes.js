@@ -4,8 +4,14 @@ import ClientController from '../controller/client.controller.js';
 const clientRouter = Router();
 const clientController = new ClientController();
 
-clientRouter.post('/api/register', clientController.create);
-clientRouter.get('/api/clients', clientController.index);
-clientRouter.get('/api/client/:id', clientController.show);
+clientRouter.use(
+  '/api/clients',
+  Router()
+    .get('/', clientController.index)
+    .post('/create', clientController.create)
+    .get('/:id', clientController.show)
+    .put('/:id', clientController.update)
+    .delete('/:id', clientController.delete)
+);
 
 export default clientRouter;

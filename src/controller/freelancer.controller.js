@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { prisma } from "../lib";
+import { z } from 'zod';
+import { prisma } from '../lib';
 
 const freelancerSchema = z.object({
   firstName: z.string(),
@@ -13,7 +13,8 @@ const freelancerSchema = z.object({
 export default class FreelancerController {
   async create(req, res) {
     try {
-      const { firstName, lastName, email, phone, password, skills } = freelancerSchema.parse(req.body);
+      const { firstName, lastName, email, phone, password, skills } =
+        freelancerSchema.parse(req.body);
 
       const freelancer = await prisma.freelancer.create({
         data: {
@@ -73,7 +74,8 @@ export default class FreelancerController {
   async update(req, res) {
     const { id } = req.params;
     try {
-      const { firstName, lastName, email, phone, password, skills } = freelancerSchema.parse(req.body);
+      const { firstName, lastName, email, phone, password, skills } =
+        freelancerSchema.parse(req.body);
 
       const freelancer = await prisma.freelancer.update({
         where: {
