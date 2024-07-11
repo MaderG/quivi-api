@@ -26,13 +26,16 @@
     "prisma": "^5.16.2"
   },
   "dependencies": {
+    "@langchain/google-vertexai": "^0.0.19",
     "@prisma/client": "^5.16.2",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "express-async-errors": "^3.1.1",
     "helmet": "^7.1.0",
+    "langchain": "^0.2.9",
     "morgan": "^1.10.0",
     "zod": "^3.23.8"
   },
   "type": "module"
 }
+
