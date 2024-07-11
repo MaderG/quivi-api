@@ -13,3 +13,5 @@ freelancerRouter.use(
     .put('/:id', freelancerController.update)
     .delete('/:id', freelancerController.delete)
 );
+
+export default freelancerRouter;
