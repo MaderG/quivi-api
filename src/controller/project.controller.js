@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { prisma } from '../lib';
+import { prisma } from '../lib/index.js';
 
 const projectSchema = z.object({
   title: z.string(),

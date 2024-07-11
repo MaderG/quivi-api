@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "docker:start": "docker-compose up",
-    "docker:stop": "docker-compose stop",
-    "docker:delete": "docker-compose down",
+    "docker:start": "docker compose up",
+    "docker:stop": "docker compose stop",
+    "docker:delete": "docker compose down",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "format": "prettier --write \"src/**/*.js\""
