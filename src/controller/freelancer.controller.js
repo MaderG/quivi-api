@@ -1,55 +1,18 @@
 import { prisma } from '../lib/index.js';
 import bcrypt from 'bcrypt';
-import { authSchema, freelancerSchema } from '../zod/index.js';
-import jsonwebtoken from 'jsonwebtoken';
-
+import { freelancerSchema, freelancerUpdateSchema } from '../zod/index.js';
 
 export default class FreelancerController {
-  async authenticate(req, res) {
-    try {
-      const { email, password } = authSchema.parse(req.body);
-      const user = await prisma.user.findUnique({
-        where: {
-          email,
-        },
-        include: {
-          freelancer: true,
-        },
-      });
-      if (!user) {
-        throw new Error('Usuário não encontrado');
-      }
-
-      if (user.freelancer === null) {
-        throw new Error('Usuário não é freelancer');
-      }
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-
-      if (!isPasswordValid) {
-        throw new Error('Senha inválida');
-      }
-
-      delete user.password;
-
-      const jwt = await jsonwebtoken.sign({ id: user.id }, process.env.JWT_SECRET, {
-        expiresIn: '1d',
-      });
-      res.status(200).json({ jwt });
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  }
 
   async create(req, res) {
     try {
-      const { firstName, lastName, email, phone, password, skills } =
+      const { firstName, lastName, email, phone, password, skills, bio } =
         freelancerSchema.parse(req.body);
 
       const userExists = await prisma.user.findUnique({ where: { email } });
 
       if (userExists) {
-        throw new Error('Email já cadastrado');
+        return res.status(400).json({ error: 'Email já cadastrado' });
       }
 
       const salt = await bcrypt.genSalt(10);
@@ -59,18 +22,19 @@ export default class FreelancerController {
         data: {
           user: {
             create: {
-              firstName: firstName,
-              lastName: lastName,
+              firstName,
+              lastName,
               email,
               phone,
               password: hashedPassword,
+              role: 'FREELANCER',
             },
           },
           skills,
+          bio,
         },
       });
 
-      delete freelancer.user.password;
       res.status(201).json(freelancer);
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -114,30 +78,57 @@ export default class FreelancerController {
 
   async update(req, res) {
     const { id } = req.params;
-    try {
-      const { firstName, lastName, email, phone, password, skills } =
-        freelancerSchema.parse(req.body);
 
-      const freelancer = await prisma.freelancer.update({
+    if (!id) {
+      return res.status(400).json({ error: 'ID é obrigatório' });
+    }
+
+    try {
+      const freelancer = await prisma.freelancer.findUnique({
         where: {
-          userId: id,
-        },
-        data: {
-          user: {
-            update: {
-              name: `${firstName} ${lastName}`,
-              email,
-              phone,
-              password,
-            },
-          },
-          skills: {
-            set: skills,
-          },
+          user_id: id,
         },
       });
 
-      res.status(200).json(freelancer);
+      if (!freelancer) {
+        return res.status(404).json({ error: 'Freelancer não encontrado' });
+      }
+
+      if (req.userRole !== 'ADMIN' && freelancer.user_id !== req.userId) {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+
+      const { firstName, lastName, email, phone, password, skills } =
+        freelancerUpdateSchema.parse(req.body);
+
+      const updateData = {
+        user: {
+          update: {
+            firstName,
+            lastName,
+            email,
+            phone,
+          },
+        },
+        skills: {
+          set: skills,
+        },
+      };
+
+      if (password) {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        updateData.user.update.password = hashedPassword;
+      }
+
+      const updatedFreelancer = await prisma.freelancer.update({
+        where: {
+          user_id: id,
+        },
+        data: updateData,
+      });
+
+      res.status(200).json(updatedFreelancer);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
@@ -145,12 +136,32 @@ export default class FreelancerController {
 
   async delete(req, res) {
     const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: 'ID é obrigatório' });
+    }
+
     try {
-      await prisma.freelancer.delete({
+      const freelancer = await prisma.freelancer.findUnique({
         where: {
-          userId: id,
+          user_id: id,
         },
       });
+
+      if (!freelancer) {
+        return res.status(404).json({ error: 'Freelancer não encontrado' });
+      }
+
+      if (req.userRole !== 'ADMIN' && freelancer.user_id !== req.userId) {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+
+      await prisma.freelancer.delete({
+        where: {
+          user_id: id,
+        },
+      });
+
       res.status(204).send();
     } catch (error) {
       res.status(400).json({ error: error.message });
