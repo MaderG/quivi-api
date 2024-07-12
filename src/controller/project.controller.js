@@ -1,14 +1,6 @@
 import { z } from 'zod';
 import { prisma } from '../lib/index.js';
-
-const projectSchema = z.object({
-  title: z.string(),
-  description: z.string(),
-  budget: z.number().int().positive(),
-  deadline: z.string().transform((str) => new Date(str)),
-  client_id: z.string().uuid(),
-  freelancer_id: z.string().uuid().optional(),
-});
+import { projectSchema } from '../zod/index.js';
 
 export default class ProjectController {
   async create(req, res) {
