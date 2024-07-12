@@ -5,7 +5,13 @@ import { compareSkills } from '../utils/match.js';
 export default class ProjectController {
   async create(req, res) {
     try {
-      const { title, description, budget, deadline, client_id, requiredSkills } = projectSchema.parse(req.body);
+      const { title, description, budget, deadline, requiredSkills } = projectSchema.parse(req.body);
+
+      const client_id = req.userId;
+
+      if (!client_id) {
+        return res.status(403).json({ error: 'Unauthorized' })
+      }
 
       const project = await prisma.project.create({
         data: {
@@ -26,7 +32,7 @@ export default class ProjectController {
       const { bestMatch, highestScore } = await compareSkills(freelancers, project);
 
       if (bestMatch) {
-
+        // TODO: Ter um chat e depois colocar o freelancer no projeto se aceitarem 
         console.log('Best Match:', bestMatch);
         console.log('Score:', highestScore);
       }

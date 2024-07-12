@@ -20,6 +20,7 @@ export const freelancerSchema = z.object({
   phone: z.string().optional(),
   password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
   skills: z.array(z.string()),
+  bio: z.string().optional(),
 });
 
 export const projectSchema = z.object({
@@ -27,12 +28,10 @@ export const projectSchema = z.object({
   description: z.string(),
   budget: z.number().int().positive(),
   deadline: z.string().transform((str) => new Date(str)),
-  client_id: z.string().uuid(),
   freelancer_id: z.string().uuid().optional(),
   requiredSkills: z
     .array(z.string())
     .nonempty('Pelo menos uma habilidade é necessária'),
-  bio: z.string().optional(),
 });
 
 export const clientUpdateSchema = z.object({
@@ -58,7 +57,6 @@ export const projectUpdateSchema = z.object({
   deadline: z.string().transform((str) => new Date(str)).optional(),
   requiredSkills: z.array(z.string()).nonempty().optional(),
   freelancer_id: z.string().uuid().optional(),
-  bio: z.string().optional(),
 });
 
 export const adminSchema = z.object({
