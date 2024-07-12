@@ -1,20 +1,59 @@
-import { z } from 'zod';
 import { prisma } from '../lib/index.js';
+import bcrypt from 'bcrypt';
+import { authSchema, freelancerSchema } from '../zod/index.js';
+import jsonwebtoken from 'jsonwebtoken';
 
-const freelancerSchema = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  password: z.string().min(6),
-  skills: z.array(z.string()),
-});
 
 export default class FreelancerController {
+  async authenticate(req, res) {
+    try {
+      const { email, password } = authSchema.parse(req.body);
+      const user = await prisma.user.findUnique({
+        where: {
+          email,
+        },
+        include: {
+          freelancer: true,
+        },
+      });
+      if (!user) {
+        throw new Error('Usuário não encontrado');
+      }
+
+      if (user.freelancer === null) {
+        throw new Error('Usuário não é freelancer');
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        throw new Error('Senha inválida');
+      }
+
+      delete user.password;
+
+      const jwt = await jsonwebtoken.sign({ id: user.id }, process.env.JWT_SECRET, {
+        expiresIn: '1d',
+      });
+      res.status(200).json({ jwt });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
   async create(req, res) {
     try {
       const { firstName, lastName, email, phone, password, skills } =
         freelancerSchema.parse(req.body);
+
+      const userExists = await prisma.user.findUnique({ where: { email } });
+
+      if (userExists) {
+        throw new Error('Email já cadastrado');
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
       const freelancer = await prisma.freelancer.create({
         data: {
@@ -24,13 +63,14 @@ export default class FreelancerController {
               lastName: lastName,
               email,
               phone,
-              password,
+              password: hashedPassword,
             },
           },
           skills,
         },
       });
 
+      delete freelancer.user.password;
       res.status(201).json(freelancer);
     } catch (error) {
       res.status(400).json({ error: error.message });

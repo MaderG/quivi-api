@@ -1,19 +1,60 @@
-import { z } from 'zod';
 import { prisma } from '../lib/index.js';
-
-const clientSchema = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  password: z.string().min(6),
-});
+import { clientSchema } from '../zod/index.js';
+import bcrypt from 'bcrypt';
+import jsonwebtoken from 'jsonwebtoken';
 
 export default class ClientController {
+  async authenticate(req, res) {
+    try {
+      const { email, password } = clientSchema.parse(req.body);
+
+      const user = await prisma.user.findUnique({
+        where: {
+          email,
+        },
+        include: {
+          client: true,
+        },
+      });
+
+      if (!user) {
+        throw new Error('Usuário não encontrado');
+      }
+
+      if (user.client === null) {
+        throw new Error('Usuário não é cliente');
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        throw new Error('Senha inválida');
+      }
+
+      delete user.password;
+
+      const jwt = await jsonwebtoken.sign({ id: user.id }, process.env.JWT_SECRET, {
+        expiresIn: '1d',
+      });
+      res.status(200).json({ jwt });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
   async create(req, res) {
     try {
       const { firstName, lastName, email, phone, password } =
         clientSchema.parse(req.body);
+
+      const userExists = await prisma.user.findUnique({ where: { email } });
+
+      if (userExists) {
+        throw new Error('Email já cadastrado');
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
       const client = await prisma.client.create({
         data: {
@@ -23,12 +64,13 @@ export default class ClientController {
               lastName,
               email,
               phone,
-              password,
+              password: hashedPassword,
             },
           },
         },
       });
 
+      delete client.user.password;
       res.status(201).send(client);
     } catch (error) {
       res.status(400).json({ error: error.message });
