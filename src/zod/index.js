@@ -29,4 +29,42 @@ export const projectSchema = z.object({
   deadline: z.string().transform((str) => new Date(str)),
   client_id: z.string().uuid(),
   freelancer_id: z.string().uuid().optional(),
+  requiredSkills: z
+    .array(z.string())
+    .nonempty('Pelo menos uma habilidade é necessária'),
+  bio: z.string().optional(),
+});
+
+export const clientUpdateSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+});
+
+export const freelancerUpdateSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  skills: z.array(z.string()).optional(),
+  bio: z.string().optional(),
+});
+
+export const projectUpdateSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  budget: z.number().int().positive().optional(),
+  deadline: z.string().transform((str) => new Date(str)).optional(),
+  requiredSkills: z.array(z.string()).nonempty().optional(),
+  freelancer_id: z.string().uuid().optional(),
+  bio: z.string().optional(),
+});
+
+export const adminSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().email(),
+  phone: z.string().optional(),
+  password: z.string().min(6),
 });
