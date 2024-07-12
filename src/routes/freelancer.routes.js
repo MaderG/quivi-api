@@ -9,6 +9,7 @@ freelancerRouter.use(
   Router()
     .get('/', freelancerController.index)
     .post('/create', freelancerController.create)
+    .post('/login', freelancerController.authenticate)
     .get('/:id', freelancerController.show)
     .put('/:id', freelancerController.update)
     .delete('/:id', freelancerController.delete)

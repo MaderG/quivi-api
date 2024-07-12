@@ -9,6 +9,7 @@ clientRouter.use(
   Router()
     .get('/', clientController.index)
     .post('/create', clientController.create)
+    .post('/login', clientController.authenticate)
     .get('/:id', clientController.show)
     .put('/:id', clientController.update)
     .delete('/:id', clientController.delete)
