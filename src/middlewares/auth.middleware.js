@@ -11,7 +11,8 @@ export default function authMiddleware(req, res, next) {
 
   try {
     const jwt = jsonwebtoken.verify(token, process.env.JWT_SECRET);
-    req.userId = jwt;
+    req.userId = jwt.id;
+    req.userRole = jwt.role;
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Token inválido' });
