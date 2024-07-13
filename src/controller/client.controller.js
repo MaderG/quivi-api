@@ -1,19 +1,22 @@
-import { z } from 'zod';
 import { prisma } from '../lib/index.js';
-
-const clientSchema = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  password: z.string().min(6),
-});
+import { clientSchema, clientUpdateSchema } from '../zod/index.js';
+import bcrypt from 'bcrypt';
 
 export default class ClientController {
+
   async create(req, res) {
     try {
       const { firstName, lastName, email, phone, password } =
         clientSchema.parse(req.body);
+
+      const userExists = await prisma.user.findUnique({ where: { email } });
+
+      if (userExists) {
+        return res.status(400).json({ error: 'Email já cadastrado' });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
       const client = await prisma.client.create({
         data: {
@@ -23,7 +26,8 @@ export default class ClientController {
               lastName,
               email,
               phone,
-              password,
+              password: hashedPassword,
+              role: 'CLIENT',
             },
           },
         },
@@ -77,25 +81,50 @@ export default class ClientController {
 
   async update(req, res) {
     const { id } = req.params;
-    const { name, email, phone, password } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: 'ID é obrigatório' });
+    }
 
     try {
-      const client = await prisma.user.update({
+      const client = await prisma.client.findUnique({
         where: {
-          id: String(id),
-        },
-        data: {
-          name,
-          email,
-          phone,
-          password,
-        },
-        include: {
-          client: true,
+          user_id: id,
         },
       });
 
-      res.status(200).send(client);
+      if (!client) {
+        return res.status(404).json({ error: 'Cliente não encontrado' });
+      }
+
+      if (req.userRole !== 'ADMIN' && client.user_id !== req.userId) {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+
+      const { firstName, lastName, email, phone, password } =
+        clientUpdateSchema.parse(req.body);
+
+      const updateData = {
+        firstName,
+        lastName,
+        email,
+        phone,
+      };
+
+      if (password) {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        updateData.password = hashedPassword;
+      }
+
+      const updatedClient = await prisma.user.update({
+        where: {
+          id: String(id),
+        },
+        data: updateData,
+      });
+
+      res.status(200).json(updatedClient);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
@@ -103,7 +132,26 @@ export default class ClientController {
 
   async delete(req, res) {
     const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: 'ID é obrigatório' });
+    }
+
     try {
+      const client = await prisma.client.findUnique({
+        where: {
+          user_id: id,
+        },
+      });
+
+      if (!client) {
+        return res.status(404).json({ error: 'Cliente não encontrado' });
+      }
+
+      if (req.userRole !== 'ADMIN' && client.user_id !== req.userId) {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+
       await prisma.user.delete({
         where: {
           id: String(id),
