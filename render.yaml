@@ -1,11 +1,11 @@
 # Exported from Render on 2024-08-06T22:14:10Z
 databases:
   # A Pro database instance with a read replica
-  - name: prod # Required
+  - name: quiviapi # Required
     region: oregon # Default: oregon
     plan: free # Default: starter
-    databaseName: quivi-database # Default: generated value based on name
-    user: app_user # Default: generated value based on name
+    databaseName: quiviapi # Default: generated value based on name
+    user: docker # Default: generated value based on name
     ipAllowList: # Default: allows all connections
       - source: 0.0.0.0/0
         description: everywhere
@@ -21,10 +21,10 @@ services:
         sync: false
       - key: DATABASE_URL
         fromDatabase:
-          name: quivi-database
+          name: quiviapi
           property: connectionString
 
     region: oregon
     buildCommand: npm install
-    startCommand: node src/index.js
+    startCommand: node
 version: "1"
