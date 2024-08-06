@@ -1,0 +1,32 @@
+# Exported from Render on 2024-08-06T22:14:10Z
+databases:
+  # A Pro database instance with a read replica
+  - name: prod # Required
+    region: oregon # Default: oregon
+    plan: free # Default: starter
+    databaseName: quivi-database # Default: generated value based on name
+    user: app_user # Default: generated value based on name
+    ipAllowList: # Default: allows all connections
+      - source: 0.0.0.0/0
+        description: everywhere
+services:
+  - type: web
+    name: quivi-api
+    runtime: node
+    repo: https://github.com/MaderG/quivi-api
+    plan: free
+
+    envVars:
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quivi-database
+          property: connectionString
+
+    region: oregon
+    buildCommand: npm install
+    startCommand:
+      npm install && npm run docker:start && npm run prisma:generate &&
+      npm run prisma:migrate && npm start
+version: "1"
