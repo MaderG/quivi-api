@@ -6,7 +6,7 @@ export default class ClientController {
 
   async create(req, res) {
     try {
-      const { firstName, lastName, email, phone, password } =
+      const { firstName, lastName, email, phone, password, photo } =
         clientSchema.parse(req.body);
 
       const userExists = await prisma.user.findUnique({ where: { email } });
@@ -22,6 +22,7 @@ export default class ClientController {
         data: {
           user: {
             create: {
+              photo,
               firstName,
               lastName,
               email,

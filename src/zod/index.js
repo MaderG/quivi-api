@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const clientSchema = z.object({
+  photo: z.string(),
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email(),
@@ -14,6 +15,8 @@ export const authSchema = z.object({
 });
 
 export const freelancerSchema = z.object({
+  photo: z.string(),
+  location: z.string(),
   firstName: z.string('O primeiro nome é obrigatório'),
   lastName: z.string('O sobrenome é obrigatório'),
   email: z.string().email('O email deve ser válido'),

@@ -6,7 +6,7 @@ export default class FreelancerController {
 
   async create(req, res) {
     try {
-      const { firstName, lastName, email, phone, password, skills, bio } =
+      const { firstName, lastName, email, phone, password, skills, bio, photo, location } =
         freelancerSchema.parse(req.body);
 
       const userExists = await prisma.user.findUnique({ where: { email } });
@@ -22,6 +22,8 @@ export default class FreelancerController {
         data: {
           user: {
             create: {
+              photo,
+              location,
               firstName,
               lastName,
               email,

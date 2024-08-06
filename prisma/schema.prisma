@@ -14,6 +14,7 @@ datasource db {
 }
 
 model User {
+  photo      String?
   id         String      @id @default(uuid())
   email      String      @unique
   firstName  String
@@ -36,6 +37,7 @@ model Client {
 model Freelancer {
   user_id  String    @id @unique
   user     User      @relation(fields: [user_id], references: [id])
+  location String
   projects Project[]
   skills   String[]
   bio      String?
