@@ -26,7 +26,5 @@ services:
 
     region: oregon
     buildCommand: npm install
-    startCommand:
-      npm install && npm run docker:start && npm run prisma:generate &&
-      npm run prisma:migrate && npm start
+    startCommand: node src/index.js
 version: "1"
