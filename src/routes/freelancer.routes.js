@@ -7,12 +7,12 @@ const freelancerRouter = Router();
 const freelancerController = new FreelancerController();
 
 
-freelancerRouter.use('/api/freelancers', Router())
+freelancerRouter.post('/api/freelancers/create', freelancerController.create);
 
 freelancerRouter.use('/api/freelancers', Router().use(authMiddleware, roleMiddleware(['ADMIN', 'FREELANCER']))
   .get('/', freelancerController.index)
   .get('/:id', freelancerController.show)
-  .put('/:id', freelancerController.update)
+  .patch('/:id', freelancerController.update)
   .delete('/:id', freelancerController.delete)
 )
 

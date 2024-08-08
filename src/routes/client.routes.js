@@ -12,7 +12,7 @@ clientRouter.use('/api/clients', Router()
   .use(authMiddleware, roleMiddleware(['ADMIN', 'CLIENT']))
   .get('/', clientController.index)
   .get('/:id', clientController.show)
-  .put('/:id', clientController.update)
+  .patch('/:id', clientController.update)
   .delete('/:id', clientController.delete)
 );
 

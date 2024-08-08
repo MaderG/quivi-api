@@ -25,7 +25,7 @@ projectRouter.use(
       roleMiddleware(['ADMIN', 'CLIENT', 'FREELANCER']),
       projectController.show
     )
-    .put('/:id', roleMiddleware(['ADMIN', 'CLIENT']), projectController.update)
+    .patch('/:id', roleMiddleware(['ADMIN', 'CLIENT']), projectController.update)
     .delete(
       '/:id',
       roleMiddleware(['ADMIN', 'CLIENT']),
