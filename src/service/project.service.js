@@ -1,14 +1,12 @@
-import { ChatVertexAI } from '@langchain/google-vertexai';
+import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
+import { prisma } from '../lib/index.js';
 
-const model = new ChatVertexAI({
-  model: 'gemini-1.5-flash',
-  temperature: 0,
-});
+const model = new ChatOpenAI({ model: 'gpt-4o-mini' });
 
 async function aiCompareSkills(freelancer, project) {
   const scoreSchema = z.object({
-    score: z.string().describe('The score that represents how well the freelancer fits the project from 0 to 100'),
+    score: z.string().describe('Only the number of the score that represents how well the freelancer fits the project from 0 to 100'),
   });
 
   const structuredLlm = model.withStructuredOutput(scoreSchema);
@@ -23,27 +21,45 @@ async function aiCompareSkills(freelancer, project) {
 export async function compareSkills(freelancers, project) {
   const projectSkills = project.requiredSkills;
 
-  // Filtragem inicial de freelancers que possuem habilidades em comum
   const filteredFreelancers = freelancers.filter(freelancer => {
     const commonSkills = freelancer.skills.filter(skill => projectSkills.includes(skill));
     return commonSkills.length > 0;
   });
 
-  // Limitar a lista de freelancers para 5 a 10
   const limitedFreelancers = filteredFreelancers.slice(0, 10);
 
-  let bestMatch = null;
-  let highestScore = 0;
+  const scores = await Promise.all(
+    limitedFreelancers.map(async (freelancer) => {
+      // Verificar se a pontuação já existe no banco de dados
+      let existingScore = await prisma.projectFreelancerScore.findUnique({
+        where: {
+          project_id_freelancer_id: {
+            project_id: project.id,
+            freelancer_id: freelancer.user_id,
+          },
+        },
+      });
 
-  // Avaliar cada freelancer filtrado usando a IA
-  for (const freelancer of limitedFreelancers) {
-    const matchResult = await aiCompareSkills(freelancer, project);
-    const score = parseInt(matchResult.score, 10);
-    if (score > highestScore) {
-      highestScore = score;
-      bestMatch = freelancer;
-    }
-  }
+      // Se não existir, calcular a pontuação e salvar no banco de dados
+      if (!existingScore) {
+        const matchResult = await aiCompareSkills(freelancer, project);
+        const score = parseInt(matchResult.score, 10);
+        
+        existingScore = await prisma.projectFreelancerScore.create({
+          data: {
+            project_id: project.id,
+            freelancer_id: freelancer.user_id,
+            score,
+          },
+        });
+      }
 
-  return { bestMatch, highestScore };
+      return { freelancer, score: existingScore.score };
+    })
+  );
+
+  scores.sort((a, b) => b.score - a.score);
+  const topScores = scores.slice(0, 6);
+
+  return topScores;
 }

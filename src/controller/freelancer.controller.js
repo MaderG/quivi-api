@@ -23,7 +23,6 @@ export default class FreelancerController {
           user: {
             create: {
               photo,
-              location,
               firstName,
               lastName,
               email,
@@ -34,6 +33,7 @@ export default class FreelancerController {
           },
           skills,
           bio,
+          location 
         },
       });
 
