@@ -2,34 +2,53 @@ import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
 import { prisma } from '../lib/index.js';
 
-const model = new ChatOpenAI({ model: 'gpt-4o-mini' });
+// const prompt = `You are an expert in analyzing project requirements and evaluating the skillset of freelancers. Your task is to compare the project description with the freelancer's skills and generate a compatibility score from 0 to 100.
 
+// **Step 1:** Analyze the project description to identify the key skills, experience, and tools required to successfully complete the project.
+
+// **Step 2:** Compare the identified skills from the project description with the provided freelancer skills. Consider the relevance, depth of experience, and proficiency with required tools or software.
+
+// **Step 3:** Generate a compatibility score from 0 to 100 based on how well the freelancer's skills match the project requirements. Provide a brief explanation for the score.
+
+// **Input:**
+
+// - Project Description: ${project.description}
+// - Freelancer Skills: ${freelancer.skills}
+// - Freelancer Bio: ${freelancer.bio}
+// `
+ 
+const model = new ChatOpenAI({ model: 'gpt-4o-mini' });
+ 
 async function aiCompareSkills(freelancer, project) {
   const scoreSchema = z.object({
     score: z.string().describe('Only the number of the score that represents how well the freelancer fits the project from 0 to 100'),
+    explanation: z.string().describe('Brief Explanation of the Score')
   });
-
+ 
   const structuredLlm = model.withStructuredOutput(scoreSchema);
+ 
+  const response = await structuredLlm.invoke(`You are an expert in analyzing project requirements and evaluating the skillset of freelancers. Your task is to compare the project description with the freelancer's skills and generate a compatibility score from 0 to 100.
 
-  const response = await structuredLlm.invoke(
-    `compare the freelancer and the project using mainly the skills and give me a score that represents how well the freelancer fits the project. Freelancer skills: ${freelancer.skills}. Project skills: ${project.requiredSkills}`
-  );
+**Step 1:** Analyze the project description to identify the key skills, experience, and tools required to successfully complete the project.
 
+**Step 2:** Compare the identified skills from the project description with the provided freelancer skills. Consider the relevance, depth of experience, and proficiency with required tools or software.
+
+**Step 3:** Generate a compatibility score from 0 to 100 based on how well the freelancer's skills match the project requirements. Provide a brief explanation for the score.
+
+**Input:**
+
+- Project Description: ${project.description}
+- Freelancer Skills: ${freelancer.skills}
+- Freelancer Bio: ${freelancer.bio}
+`);
+ 
   return response;
 }
 
 export async function compareSkills(freelancers, project) {
-  const projectSkills = project.requiredSkills;
-
-  const filteredFreelancers = freelancers.filter(freelancer => {
-    const commonSkills = freelancer.skills.filter(skill => projectSkills.includes(skill));
-    return commonSkills.length > 0;
-  });
-
-  const limitedFreelancers = filteredFreelancers.slice(0, 10);
 
   const scores = await Promise.all(
-    limitedFreelancers.map(async (freelancer) => {
+    freelancers.map(async (freelancer) => {
       // Verificar se a pontuação já existe no banco de dados
       let existingScore = await prisma.projectFreelancerScore.findUnique({
         where: {
