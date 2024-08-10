@@ -1,17 +1,17 @@
-import { prisma } from '../lib/index.js';
+import  {prisma}  from '../lib/index.js';
 import { projectSchema, projectUpdateSchema } from '../zod/index.js';
 import { compareSkills } from '../service/project.service.js';
 
 export default class ProjectController {
   async create(req, res) {
     try {
-      const { title, description, budget, deadline, requiredSkills } = projectSchema.parse(req.body);
+      const { title, description, budget, deadline } = projectSchema.parse(req.body);
       const client_id = req.userId;
-  
+
       if (!client_id) {
         return res.status(403).json({ error: 'Unauthorized' });
       }
-  
+
       const project = await prisma.project.create({
         data: {
           title,
@@ -19,16 +19,15 @@ export default class ProjectController {
           budget,
           deadline,
           client_id,
-          requiredSkills,
         },
       });
-  
+
       const freelancers = await prisma.freelancer.findMany({
         include: { user: true },
       });
-  
+
       const topFreelancers = await compareSkills(freelancers, project);
-  
+
       res.status(201).json({ project, topFreelancers });
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -43,24 +42,28 @@ export default class ProjectController {
           freelancer: true,
         },
       });
-  
+
       const projectsWithTopFreelancers = await Promise.all(projects.map(async (project) => {
-        const topFreelancers = await prisma.projectFreelancerScore.findMany({
-          where: { project_id: project.id },
-          orderBy: { score: 'desc' },
-          include: { freelancer: { include: { user: true } } },
-          take: 6,
-        });
-  
-        return {
-          ...project,
-          topFreelancers: topFreelancers.map(scoreRecord => ({
+        let topFreelancers = [];
+        if (!project.freelancer) {
+          const topFreelancersFromDB = await prisma.projectFreelancerScore.findMany({
+            where: { project_id: project.id },
+            orderBy: { score: 'desc' },
+            include: { freelancer: { include: { user: true } } },
+            take: 6,
+          });
+          topFreelancers = topFreelancersFromDB.map(scoreRecord => ({
             freelancer: scoreRecord.freelancer,
             score: scoreRecord.score,
-          })),
+          }));
+        }
+
+        return {
+          ...project,
+          topFreelancers,
         };
       }));
-  
+
       res.status(200).json(projectsWithTopFreelancers);
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -68,42 +71,46 @@ export default class ProjectController {
   }
 
   async show(req, res) {
-  const { id } = req.params;
-  try {
-    const project = await prisma.project.findUnique({
-      where: {
-        id: String(id),
-      },
-      include: {
-        client: true,
-        freelancer: true,
-      },
-    });
+    const { id } = req.params;
+    try {
+      const project = await prisma.project.findUnique({
+        where: {
+          id: String(id),
+        },
+        include: {
+          client: true,
+          freelancer: true,
+        },
+      });
 
-    if (!project) {
-      return res.status(404).send();
+      if (!project) {
+        return res.status(404).send();
+      }
+
+      let topFreelancers = [];
+      if (!project.freelancer) {
+        const topFreelancersFromDB = await prisma.projectFreelancerScore.findMany({
+          where: { project_id: project.id },
+          orderBy: { score: 'desc' },
+          include: { freelancer: { include: { user: true } } },
+          take: 6,
+        });
+        topFreelancers = topFreelancersFromDB.map(scoreRecord => ({
+          freelancer: scoreRecord.freelancer,
+          score: scoreRecord.score,
+        }));
+      }
+
+      const projectWithTopFreelancers = {
+        ...project,
+        topFreelancers,
+      };
+
+      res.status(200).json(projectWithTopFreelancers);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
     }
-
-    const topFreelancers = await prisma.projectFreelancerScore.findMany({
-      where: { project_id: project.id },
-      orderBy: { score: 'desc' },
-      include: { freelancer: { include: { user: true } } },
-      take: 6,
-    });
-
-    const projectWithTopFreelancers = {
-      ...project,
-      topFreelancers: topFreelancers.map(scoreRecord => ({
-        freelancer: scoreRecord.freelancer,
-        score: scoreRecord.score,
-      })),
-    };
-
-    res.status(200).json(projectWithTopFreelancers);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
   }
-}
 
   async update(req, res) {
     const { id } = req.params;
@@ -122,8 +129,17 @@ export default class ProjectController {
         return res.status(403).json({ error: 'Unauthorized' });
       }
 
-      const updateData = { title, description, budget, client_id, freelancer_id };
+      const updateData = {};
 
+      if (title) updateData.title = title;
+      if (description) updateData.description = description;
+      if (budget) updateData.budget = budget;
+      if (client_id) updateData.client_id = client_id;
+      if (freelancer_id) {
+        updateData.freelancer = {
+          connect: { user_id: freelancer_id },
+        };
+      }
       if (deadline) {
         updateData.deadline = new Date(deadline);
       }

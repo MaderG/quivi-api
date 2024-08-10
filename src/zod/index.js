@@ -32,9 +32,6 @@ export const projectSchema = z.object({
   budget: z.number().int().positive(),
   deadline: z.string().transform((str) => new Date(str)),
   freelancer_id: z.string().uuid().optional(),
-  requiredSkills: z
-    .array(z.string())
-    .nonempty('Pelo menos uma habilidade é necessária'),
 });
 
 export const clientUpdateSchema = z.object({
@@ -58,7 +55,6 @@ export const projectUpdateSchema = z.object({
   description: z.string().optional(),
   budget: z.number().int().positive().optional(),
   deadline: z.string().transform((str) => new Date(str)).optional(),
-  requiredSkills: z.array(z.string()).nonempty().optional(),
   freelancer_id: z.string().uuid().optional(),
 });
 
