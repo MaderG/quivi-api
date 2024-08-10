@@ -2,20 +2,6 @@ import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
 import { prisma } from '../lib/index.js';
 
-// const prompt = `You are an expert in analyzing project requirements and evaluating the skillset of freelancers. Your task is to compare the project description with the freelancer's skills and generate a compatibility score from 0 to 100.
-
-// **Step 1:** Analyze the project description to identify the key skills, experience, and tools required to successfully complete the project.
-
-// **Step 2:** Compare the identified skills from the project description with the provided freelancer skills. Consider the relevance, depth of experience, and proficiency with required tools or software.
-
-// **Step 3:** Generate a compatibility score from 0 to 100 based on how well the freelancer's skills match the project requirements. Provide a brief explanation for the score.
-
-// **Input:**
-
-// - Project Description: ${project.description}
-// - Freelancer Skills: ${freelancer.skills}
-// - Freelancer Bio: ${freelancer.bio}
-// `
  
 const model = new ChatOpenAI({ model: 'gpt-4o-mini' });
  
