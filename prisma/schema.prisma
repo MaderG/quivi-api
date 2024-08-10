@@ -48,7 +48,6 @@ model Project {
   budget         Int
   deadline       DateTime
   client_id      String
-  requiredSkills String[]
   client         Client      @relation(fields: [client_id], references: [user_id])
   freelancer_id  String?
   freelancer     Freelancer? @relation(fields: [freelancer_id], references: [user_id])
