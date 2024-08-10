@@ -1,11 +1,11 @@
-version: '3'
+version: "3"
 
 services:
-  api-solid-pg:
+  quiviapi:
     image: bitnami/postgresql
     ports:
       - "5432:5432"
     environment:
       - POSTGRES_USER=docker
       - POSTGRES_PASSWORD=123
-      - POSTGRES_DB=quviapi
+      - POSTGRES_DB=quiviapi
